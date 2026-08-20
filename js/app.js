@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+  initAuthenticatedUserInfo();
+  
   initDynamicFields();
   initStagesTable();
   initPaymentsTable();
@@ -64,6 +66,35 @@ function validateCheckboxGroup(groupName, message) {
   }
 
   return true;
+}
+
+async function initAuthenticatedUserInfo() {
+  try {
+    const response = await fetch("/.auth/me");
+
+    if (!response.ok) {
+      console.warn("Cannot load authenticated user info");
+      return;
+    }
+
+    const authData = await response.json();
+
+    if (!authData || !authData.clientPrincipal) {
+      console.warn("No authenticated user found");
+      return;
+    }
+
+    const user = authData.clientPrincipal;
+    const userEmail = user.userDetails || "";
+
+    const managerEmailInput = document.getElementById("managerEmail");
+
+    if (managerEmailInput && userEmail) {
+      managerEmailInput.value = userEmail;
+    }
+  } catch (error) {
+    console.error("Failed to get authenticated user info:", error);
+  }
 }
 
 /* ================================
