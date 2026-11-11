@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   initAuthenticatedUserInfo();
-  initAuthenticatedUserInfo();
   
   initDynamicFields();
   initStagesTable();
@@ -166,7 +165,7 @@ function initDynamicFields() {
     radio.addEventListener("change", function () {
       const value = getRadioValue("vchasno");
 
-      showElementById("vchasnoEmailRow", value === "Так" || value === "Інше");
+            showElementById("vchasnoEmailRow", value === "Так");
     });
   });
 
@@ -718,27 +717,7 @@ function buildWordDocumentHtml(data) {
             <td class="label">Юридична особа зі сторони Adsapience</td>
             <td class="value">${escapeHtml(data.legal.legalEntity)}</td>
         </tr>
-        ${
-          data.legal.fopName
-            ? `
-                <tr>
-                    <td class="label">Назва ФОП</td>
-                    <td class="value">${escapeHtml(data.legal.fopName)}</td>
-                </tr>
-        `
-            : ""
-        }
-        ${
-          data.legal.legalOther
-            ? `
-        <tr>
-            <td class="label">Інша юридична особа</td>
-            <td class="value">${escapeHtml(data.legal.legalOther)}</td>
-        </tr>
-         `
-            : ""
-        }
-
+      
         ${
           ["ТОВ «СЕРВІС ХАБ»", "ТОВ «АДВЕЙС ЛІДЕР»", "Внутрішній ФОП"].includes(
             data.legal.legalEntityType,
@@ -754,7 +733,7 @@ function buildWordDocumentHtml(data) {
      
 
         <tr>
-            <td class="label">Мета послуг за документом</td>
+            <td class="label">Функція агентства</td>
             <td class="value">${escapeHtml(data.legal.documentPurpose)}</td>
         </tr>
     </table>
@@ -788,7 +767,7 @@ function buildWordDocumentHtml(data) {
         </tr>
 
         <tr>
-            <td class="label">Посилання на Worksection</td>
+            <td class="label">№ перевірки СБ</td>
             <td class="value">${escapeHtml(data.contractor.worksectionLink)}</td>
         </tr>
 
@@ -901,6 +880,8 @@ function buildWordDocumentHtml(data) {
             : ""
         }
     </table>
+
+    <h2>Порядок оплати</h2>
 
     ${buildPaymentsWordTable(data.payments)}
 
