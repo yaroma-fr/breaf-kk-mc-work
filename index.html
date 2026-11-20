@@ -25,7 +25,7 @@
 
       <!-- MAIN FORM -->
       <form class="brief-form" id="briefForm">
-        <!-- 1. Загальна  інформація -->
+        <!-- 1. Загальна інформація -->
         <section class="form-section" id="section-general">
           <h2>1. Загальна інформація</h2>
 
@@ -127,20 +127,6 @@
                     value="ТОВ «ТОТАЛ МАРКЕТИНГ ЕДЖЕНСІ»"
                   />
                   ТОВ «ТОТАЛ МАРКЕТИНГ ЕДЖЕНСІ»
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    name="legalEntity"
-                    value="ТОВ «ФЕАР РІТЕЙЛ»"
-                  />
-                  ТОВ «ФЕАР РІТЕЙЛ»
-                </label>
-
-                <label>
-                  <input type="radio" name="legalEntity" value="ТОВ «МІІ»" />
-                  ТОВ «МІІ»
                 </label>
 
                 <label>
@@ -494,7 +480,7 @@
                   <th>Етап</th>
                   <th>Що виконується</th>
                   <th>Період</th>
-                  <th>Сума</th>
+                  <th id="stageAmountHeader">Сума</th>
                   <th></th>
                 </tr>
               </thead>
@@ -571,6 +557,28 @@
               <input id="costAmount" name="costAmount" type="text" />
             </div>
 
+            <div class="form-row hidden" id="costNoVatRow">
+              <label for="costNoVat">Вартість без ПДВ</label>
+              <input
+                id="costNoVat"
+                name="costNoVat"
+                type="text"
+                readonly
+                placeholder="Авто"
+              />
+            </div>
+
+            <div class="form-row hidden" id="costVatRow">
+              <label for="costVat">ПДВ</label>
+              <input
+                id="costVat"
+                name="costVat"
+                type="text"
+                readonly
+                placeholder="Авто"
+              />
+            </div>
+
             <div class="form-row">
               <label for="currency">Валюта</label>
               <input
@@ -593,12 +601,14 @@
             </button>
           </div>
 
+          <p class="scroll-hint">← Гортайте таблицю вбік →</p>
+
           <div class="table-wrap">
             <table id="paymentsTable">
               <thead>
                 <tr>
                   <th>№</th>
-                  <th>Сума</th>
+                  <th id="paymentAmountHeader">Сума</th>
                   <th>Дата</th>
                   <th>Коментар</th>
                   <th></th>

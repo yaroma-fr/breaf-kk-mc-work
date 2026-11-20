@@ -112,6 +112,19 @@ function initDynamicFields() {
 
   updateCostFields();
 
+  document
+    .getElementById("costAmount")
+    .addEventListener("input", recalcCost);
+
+  // ПДВ -> заголовки таблиць
+  document
+    .querySelectorAll('input[name="contractorVat"]')
+    .forEach(function (radio) {
+      radio.addEventListener("change", updateVatHeaders);
+    });
+
+  updateVatHeaders();
+
   // Юридична особа
   document
     .querySelectorAll('input[name="legalEntity"]')
@@ -199,6 +212,51 @@ function updateCostFields() {
     document.getElementById("costAmount").value = "";
     document.getElementById("currency").value = "";
   }
+
+  recalcCost();
+}
+
+function parseNumber(value) {
+  const n = parseFloat(String(value).replace(/\s/g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+
+// Україна + платник ПДВ: з «Загальної вартості з ПДВ» рахуємо «без ПДВ» і «ПДВ»
+function recalcCost() {
+  const isVatCase =
+    getRadioValue("contractorCountry") === "Україна" &&
+    getRadioValue("contractorVat") === "Так";
+
+  showElementById("costNoVatRow", isVatCase);
+  showElementById("costVatRow", isVatCase);
+
+  const noVatEl = document.getElementById("costNoVat");
+  const vatEl = document.getElementById("costVat");
+
+  if (!noVatEl || !vatEl) return;
+
+  if (!isVatCase) {
+    noVatEl.value = "";
+    vatEl.value = "";
+    return;
+  }
+
+  const total = parseNumber(document.getElementById("costAmount").value);
+  const noVat = total / 1.2;
+
+  noVatEl.value = total ? noVat.toFixed(2) : "";
+  vatEl.value = total ? (total - noVat).toFixed(2) : "";
+}
+
+// Заголовки «Сума» у таблицях: для платника ПДВ — «Сума з ПДВ»
+function updateVatHeaders() {
+  const isVatPayer = getRadioValue("contractorVat") === "Так";
+  const text = isVatPayer ? "Сума з ПДВ" : "Сума";
+
+  ["stageAmountHeader", "paymentAmountHeader"].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  });
 }
 
 function initExclusiveCheckboxGroup(groupName, noneValue, afterChange) {
@@ -442,6 +500,8 @@ function collectBriefData() {
       amountLabel: getCostLabel(),
       amount: getValue("costAmount"),
       currency: getValue("currency"),
+      noVat: getValue("costNoVat"),
+      vat: getValue("costVat"),
     },
 
     payments: collectPayments(),
@@ -812,6 +872,9 @@ function restoreDraft() {
       if (el && state.fields[id] !== undefined) el.value = state.fields[id];
     });
   }
+
+  recalcCost();
+  updateVatHeaders();
 }
 
 function initDraftAutosave() {
@@ -853,6 +916,8 @@ function initDraftAutosave() {
 ================================ */
 
 function buildWordDocumentHtml(data) {
+  const isVatPayer = data.contractor.contractorVat === "Так";
+
   return `
 <!DOCTYPE html>
 <html>
@@ -1088,7 +1153,7 @@ function buildWordDocumentHtml(data) {
       data.stages && data.stages.length > 0
         ? `
         <h2>Етапи робіт</h2>
-        ${buildStagesWordTable(data.stages)}
+        ${buildStagesWordTable(data.stages, isVatPayer)}
     `
         : ""
     }
@@ -1109,6 +1174,22 @@ function buildWordDocumentHtml(data) {
             <td class="value">${escapeHtml(data.cost.amount)}</td>
         </tr>
 
+        ${
+          data.cost.country === "Україна" && isVatPayer
+            ? `
+        <tr>
+            <td class="label">Вартість без ПДВ</td>
+            <td class="value">${escapeHtml(data.cost.noVat)}</td>
+        </tr>
+
+        <tr>
+            <td class="label">ПДВ</td>
+            <td class="value">${escapeHtml(data.cost.vat)}</td>
+        </tr>
+        `
+            : ""
+        }
+
         <tr>
             <td class="label">Валюта</td>
             <td class="value">${escapeHtml(data.cost.currency)}</td>
@@ -1120,7 +1201,7 @@ function buildWordDocumentHtml(data) {
 
     <h2>Порядок оплати</h2>
 
-    ${buildPaymentsWordTable(data.payments)}
+    ${buildPaymentsWordTable(data.payments, isVatPayer)}
 
     <h2>7. Інтелектуальна власність</h2>
 
@@ -1181,7 +1262,7 @@ function buildWordDocumentHtml(data) {
     `;
 }
 
-function buildStagesWordTable(stages) {
+function buildStagesWordTable(stages, isVatPayer) {
   if (!stages || stages.length === 0) {
     return "<p>Етапи не заповнені.</p>";
   }
@@ -1206,7 +1287,7 @@ function buildStagesWordTable(stages) {
                     <th>Етап</th>
                     <th>Що виконується</th>
                     <th>Період</th>
-                    <th>Сума</th>
+                    <th>${isVatPayer ? "Сума з ПДВ" : "Сума"}</th>
                 </tr>
             </thead>
 
@@ -1217,7 +1298,7 @@ function buildStagesWordTable(stages) {
     `;
 }
 
-function buildPaymentsWordTable(payments) {
+function buildPaymentsWordTable(payments, isVatPayer) {
   if (!payments || payments.length === 0) {
     return "<p>Графік оплат не заповнений.</p>";
   }
@@ -1240,7 +1321,7 @@ function buildPaymentsWordTable(payments) {
             <thead>
                 <tr>
                     <th>№</th>
-                    <th>Сума</th>
+                    <th>${isVatPayer ? "Сума з ПДВ" : "Сума"}</th>
                     <th>Дата</th>
                     <th>Коментар</th>
                 </tr>
